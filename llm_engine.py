@@ -44,8 +44,10 @@ def generate_summary(article_text: str) -> str:
         f"ARTICLE:\n{article_text}\n\n"
         "Now give the bullet-point summary:"
     )
-    return _call_local_llm(prompt)
-
+    try:
+        return _call_local_llm(prompt)
+    except Exception as e:
+        return "⚠️ **LLM Offline**: Please start Ollama with `ollama serve` in your terminal to enable AI summaries.\n\nIn the meantime, the sentiment analysis above provides the market signal."
 
 def answer_question(article_text: str, question: str) -> str:
     prompt = (
@@ -56,4 +58,7 @@ def answer_question(article_text: str, question: str) -> str:
         f"QUESTION: {question}\n\n"
         "Provide a clear, concise answer in 3–6 sentences, without financial advice:"
     )
-    return _call_local_llm(prompt)
+    try:
+        return _call_local_llm(prompt)
+    except Exception as e:
+        return "⚠️ **LLM Offline**: Please start Ollama with `ollama serve` to use Q&A features."
