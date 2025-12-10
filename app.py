@@ -128,36 +128,40 @@ monitor every asset, every region, and every news event in real time.
         )
         analyze_btn = st.button("🔍 Run Sentiment & Signal")
 
-    with col_b:
+        with col_b:
         if analyze_btn and st.session_state.get("article_text_input", "").strip():
             text = st.session_state["article_text_input"]
             result = engine.analyze(text)
-
+            
+            # Store in session state for persistence
+            st.session_state["sentiment_result"] = result
+            st.session_state["article_analyzed"] = text
+            
+        # Display results from session state (persists across interactions)
+        if "sentiment_result" in st.session_state:
+            result = st.session_state["sentiment_result"]
             score = result["score"]
             label = result["label"]
             emoji = result["emoji"]
             method = result["method"]
-
             signal = derive_signal(score)
             color = get_sentiment_color(score)
-
+            
             st.markdown("#### Sentiment Result")
-            st.markdown(
-                f"""
-<div style="border-radius:10px;padding:1rem;border:1px solid #ddd;
-background:##000000;">
-<b>Sentiment:</b> {emoji} <b>{label.upper()}</b><br>;color:#FFFFFF
-<b>Score:</b> {score:.3f}<br>;color:#FFFFFF
-<b>Method:</b> {method}<br>;color:#FFFFFF
-<b>Signal:</b> <span style="color:{color};font-weight:bold;color:#FFFFFF;">{signal}</span>
+            st.markdown(f"""
+<div style="border-radius:10px;padding:1rem;border:1px solid #ddd;background:#0E1117;">
+    <p style="margin:0;"><b>Sentiment:</b> {emoji} <b style="color:{color};">{label.upper()}</b></p>
+    <p style="margin:0;"><b>Score:</b> {score:.3f}</p>
+    <p style="margin:0;"><b>Method:</b> {method}</p>
+    <p style="margin:0;"><b>Signal:</b> <span style="color:{color};font-weight:bold;">{signal}</span></p>
 </div>
-""",
-                unsafe_allow_html=True,
-            )
+""", unsafe_allow_html=True)
+            
+            st.caption("⚠️ Signal is a simple mapping of sentiment score → STRONG SELL / SELL / HOLD / BUY / STRONG BUY for demo purposes (not financial advice).")
+        
+        elif analyze_btn and not st.session_state.get("article_text_input", "").strip():
+            st.warning("Please paste or select an article before clicking *Analyze*.")
 
-        st.caption(
-            "<span style='color:#CCCCCC;'>⚠️ Signal is a simple mapping of sentiment score → STRONG SELL / SELL / HOLD / BUY / STRONG BUY for demo purposes (not financial advice).</span>",
-            unsafe_allow_html=True,
         )
     col1, col2 = st.columns(2)
 
