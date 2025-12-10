@@ -155,11 +155,10 @@ background:##000000;">
                 unsafe_allow_html=True,
             )
 
-            st.caption(
-            "<span style='color:#CCCCCC;'>⚠️ Signal is a simple mapping of sentiment score → STRONG SELL / SELL / HOLD / BUY / STRONG BUY "                "for demo purposes (not financial advice)."
-            "for demo purposes (not financial advice).</span>",
-    st.markdown("### 3️⃣ LLM Insights: Summary & Q&A")
-
+        st.caption(
+            "<span style='color:#CCCCCC;'>⚠️ Signal is a simple mapping of sentiment score → STRONG SELL / SELL / HOLD / BUY / STRONG BUY for demo purposes (not financial advice).</span>",
+            unsafe_allow_html=True,
+        )
     col1, col2 = st.columns(2)
 
             unsafe_allow_html=True,
