@@ -325,4 +325,62 @@ def main():
         if st.button("✨ Generate Summary"):
             if "article_analyzed" in st.session_state:
                 with st.spinner("Generating summary..."):
-                    summary = llm_engine.generate_
+                    summary = llm_engine.generate_summary(st.session_state["article_analyzed"])                    summary = llm_engine.generate_summary(st.session_state["article_analyzed"])
+                    st.session_state["summary"] = summary
+            
+            if "summary" in st.session_state:
+                st.info(st.session_state["summary"])
+            else:
+                st.write("Click button above to generate AI summary")
+    
+    with col2:
+        st.markdown("#### 💡 Trading Recommendations")
+        if st.button("🎯 Generate Trading Ideas"):
+            if "sentiment_result" in st.session_state and "entities" in st.session_state:
+                with st.spinner("Generating recommendations..."):
+                    suggestions = llm_engine.generate_trading_suggestions(
+                        st.session_state["article_analyzed"],
+                        st.session_state["sentiment_result"]["score"],
+                        st.session_state["entities"]
+                    )
+                    st.session_state["suggestions"] = suggestions
+            
+            if "suggestions" in st.session_state:
+                st.markdown(st.session_state["suggestions"])
+            else:
+                st.write("Click button above to get AI-powered trading ideas")
+    
+    # Q&A Section
+    st.markdown("---")
+    st.markdown("#### ❓ Ask Questions About This Article")
+    
+    question = st.text_input(
+        "Your question:",
+        placeholder="e.g., 'What companies are mentioned?' or 'What are the key risks?'"
+    )
+    
+    if st.button("🧠 Ask AI") and question.strip():
+        if "article_analyzed" in st.session_state:
+            with st.spinner("Analyzing..."):
+                answer = llm_engine.answer_question(
+                    st.session_state["article_analyzed"],
+                    question
+                )
+                st.session_state["last_qa"] = {"q": question, "a": answer}
+        else:
+            st.warning("Please analyze an article first.")
+    
+    if "last_qa" in st.session_state:
+        qa = st.session_state["last_qa"]
+        st.markdown(f"**Q:** {qa['q']}")
+        st.markdown(f"**A:** {qa['a']}")
+    
+    st.markdown("---")
+    
+    # Disclaimer
+    st.markdown('<p class="section-header">4️⃣ Regulatory & Risk Disclaimer</p>', unsafe_allow_html=True)
+    st.warning(config.DISCLAIMER)
+
+if __name__ == "__main__":
+    main()
+
