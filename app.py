@@ -161,7 +161,6 @@ background:##000000;">
         )
     col1, col2 = st.columns(2)
 
-            unsafe_allow_html=True,
         )
     with col1:
         st.markdown("#### 📌 LLM Summary")
