@@ -79,10 +79,10 @@ monitor every asset, every region, and every news event in real time.
         refresh = st.button("🔄 Fetch Latest News")
 
     if refresh:
-        st.session_state["news_df"] = data_ingestion.get_financial_news(query, n_articles)
+        st.session_state["news_df"] = data_ingestion.fetch_news_from_rss(query, n_articles)
 
     news_df: pd.DataFrame = st.session_state.get(
-        "news_df", data_ingestion.get_financial_news(query, n_articles)
+        "news_df", data_ingestion.fetch_news_from_rss(query, n_articles)
     )
 
     with col_right:
