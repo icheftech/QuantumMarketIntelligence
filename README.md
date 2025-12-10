@@ -1,7 +1,7 @@
 # 📊 Quantum Market Intelligence Platform
 
 **Version:** 1.0.0  
-**Company:** Southern Shade LLC  
+**Student:** Leroy Brown W4354857  
 **Course:** ITAI-2372 - AI in Finance (Module 04)  
 **Date:** December 2025
 
