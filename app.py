@@ -156,11 +156,8 @@ background:#fafafa;">
             )
 
             st.caption(
-                "Signal is a simple mapping of sentiment score → STRONG SELL / SELL / HOLD / BUY / STRONG BUY "
-                "for demo purposes (not financial advice)."
-            )
-
-    st.markdown("---")
+            "<span style='color:#CCCCCC;'>⚠️ Signal is a simple mapping of sentiment score → STRONG SELL / SELL / HOLD / BUY / STRONG BUY "                "for demo purposes (not financial advice)."
+            "for demo purposes (not financial advice).</span>",
     st.markdown("### 3️⃣ LLM Insights: Summary & Q&A")
 
     col1, col2 = st.columns(2)
