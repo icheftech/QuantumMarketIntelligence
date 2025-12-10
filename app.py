@@ -145,11 +145,11 @@ monitor every asset, every region, and every news event in real time.
             st.markdown(
                 f"""
 <div style="border-radius:10px;padding:1rem;border:1px solid #ddd;
-background:#fafafa;">
-<b>Sentiment:</b> {emoji} <b>{label.upper()}</b><br>
-<b>Score:</b> {score:.3f}<br>
-<b>Method:</b> {method}<br>
-<b>Signal:</b> <span style="color:{color};font-weight:bold;">{signal}</span>
+background:##000000;">
+<b>Sentiment:</b> {emoji} <b>{label.upper()}</b><br>;color:#FFFFFF
+<b>Score:</b> {score:.3f}<br>;color:#FFFFFF
+<b>Method:</b> {method}<br>;color:#FFFFFF
+<b>Signal:</b> <span style="color:{color};font-weight:bold;color:#FFFFFF;">{signal}</span>
 </div>
 """,
                 unsafe_allow_html=True,
