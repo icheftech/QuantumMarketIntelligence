@@ -8,7 +8,6 @@ Hybrid VADER + ML sentiment for financial text
 
 import re
 import string
-from datetime import datetime
 
 import joblib
 import nltk
@@ -22,7 +21,9 @@ from sklearn.naive_bayes import MultinomialNB
 
 import config
 
-# Download NLTK data
+# ---------------------------------------------------------------------
+# NLTK downloads (safe if called multiple times)
+# ---------------------------------------------------------------------
 try:
     nltk.download("vader_lexicon", quiet=True)
     nltk.download("punkt", quiet=True)
@@ -38,11 +39,12 @@ class TextPreprocessor:
         try:
             self.stopwords = set(nltk.corpus.stopwords.words("english"))
         except LookupError:
+            # If stopwords not downloaded, just skip removal
             self.stopwords = set()
         self.finance_keeps = {"up", "down", "above", "below", "over", "under", "more", "less"}
         self.stopwords = self.stopwords - self.finance_keeps
 
-    def clean_text(self, text: str) -> str:
+    def clean_text(self, text):
         if not isinstance(text, str):
             text = str(text)
 
@@ -55,10 +57,11 @@ class TextPreprocessor:
         text = re.sub(r"\s+", " ", text).strip()
         return text.lower()
 
-    def tokenize(self, text: str):
+    def tokenize(self, text):
         try:
             return nltk.word_tokenize(text)
         except LookupError:
+            # If punkt isn’t available, fall back to simple split
             return text.split()
 
     def remove_stopwords(self, tokens):
@@ -66,7 +69,7 @@ class TextPreprocessor:
             return tokens
         return [t for t in tokens if t not in self.stopwords]
 
-    def preprocess(self, text: str) -> str:
+    def preprocess(self, text):
         text = self.clean_text(text)
         tokens = self.tokenize(text)
         tokens = self.remove_stopwords(tokens)
@@ -89,6 +92,7 @@ class FinancialSentimentAnalyzer:
         self._load_model()
 
     def _load_model(self):
+        """Try loading existing model/vectorizer; fall back to VADER only."""
         try:
             self.ml_model = joblib.load(config.SENTIMENT_MODEL_PATH)
             self.vectorizer = joblib.load(config.VECTORIZER_PATH)
@@ -98,14 +102,20 @@ class FinancialSentimentAnalyzer:
             print("[Sentiment] No pre-trained model found. VADER-only mode.")
             self.is_trained = False
 
-    def train_model(self, training_data_path: str | None = None):
+    def train_model(self, training_data_path=None):
+        """
+        Train the ML sentiment model.
+        If training_data.csv is missing or broken, create sample data.
+        """
         if training_data_path is None:
             training_data_path = config.TRAINING_DATA_PATH
 
         try:
             df = pd.read_csv(training_data_path)
-        except FileNotFoundError:
-            print("[Sentiment] No training_data.csv found, creating sample training data.")
+            if df.empty or "text" not in df.columns or "label" not in df.columns:
+                raise ValueError("training_data.csv is empty or malformed.")
+        except Exception:
+            print("[Sentiment] No valid training_data.csv found, creating sample training data.")
             df = create_sample_training_data()
             df.to_csv(training_data_path, index=False)
 
@@ -135,11 +145,11 @@ class FinancialSentimentAnalyzer:
         self.is_trained = True
         return accuracy
 
-    def analyze_vader(self, text: str) -> float:
+    def analyze_vader(self, text):
         scores = self.vader.polarity_scores(text)
         return scores["compound"]
 
-    def analyze_ml(self, text: str):
+    def analyze_ml(self, text):
         if not self.is_trained:
             return None, 0.0
 
@@ -154,7 +164,9 @@ class FinancialSentimentAnalyzer:
         score = score_map.get(prediction, 0.0)
         return score, confidence
 
-    def analyze(self, text: str) -> dict:
+    def analyze(self, text):
+        """Return dict with sentiment score + label + method."""
+
         vader_score = self.analyze_vader(text)
         ml_score, ml_confidence = self.analyze_ml(text)
 
@@ -187,11 +199,11 @@ class FinancialSentimentAnalyzer:
             "ml_score": None if ml_score is None else float(ml_score),
         }
 
-    def batch_analyze(self, texts: list[str]) -> list[dict]:
+    def batch_analyze(self, texts):
         return [self.analyze(t) for t in texts]
 
 
-def get_sentiment_color(score: float) -> str:
+def get_sentiment_color(score):
     if score < -0.2:
         return config.COLOR_NEGATIVE
     if score > 0.2:
@@ -199,7 +211,7 @@ def get_sentiment_color(score: float) -> str:
     return config.COLOR_NEUTRAL
 
 
-def create_sample_training_data() -> pd.DataFrame:
+def create_sample_training_data():
     """Small labeled dataset for demo / assignment."""
     texts = [
         "Stock market rallies to record highs on strong earnings.",
@@ -212,7 +224,7 @@ def create_sample_training_data() -> pd.DataFrame:
         "Inflation concerns weigh heavily on investor sentiment.",
         "Merger announcement boosts both companies' share prices.",
         "Profit warnings from major firms drag down indices.",
-                "Central bank maintains accommodative policy stance.",
+        "Central bank maintains accommodative policy stance.",
         "Corporate profits soar amid economic recovery.",
         "Supply chain disruptions weigh on manufacturing sector.",
         "Housing market shows signs of cooling after rapid growth.",
@@ -232,7 +244,7 @@ def create_sample_training_data() -> pd.DataFrame:
         "Central bank signals potential policy shift.",
         "Tech sector leads market gains on innovation.",
         "Emerging markets show resilience amid volatility.",
-                "Tech giants report better-than-expected quarterly revenue growth.",
+        "Tech giants report better-than-expected quarterly revenue growth.",
         "Small cap stocks outperform amid economic optimism.",
         "Market volatility increases on regulatory uncertainty.",
         "Oil prices stabilize after weeks of dramatic swings.",
@@ -252,7 +264,7 @@ def create_sample_training_data() -> pd.DataFrame:
         "Insurance companies face challenges from natural disasters.",
         "Logistics companies benefit from e-commerce boom.",
         "Construction spending increases on infrastructure projects.",
-                "Pharmaceutical stocks rally on positive trial results.",
+        "Pharmaceutical stocks rally on positive trial results.",
         "Commercial real estate market shows signs of stabilization.",
         "Federal deficit projections raise long-term growth concerns.",
         "Automotive industry struggles with supply chain disruptions.",
@@ -272,7 +284,7 @@ def create_sample_training_data() -> pd.DataFrame:
         "Carbon credit markets expand amid climate policy push.",
         "Shipping costs decline as capacity constraints ease.",
         "Defense contractors secure major government contracts.",
-                "Precious metals market reacts to inflation concerns.",
+        "Precious metals market reacts to inflation concerns.",
         "Electric vehicle sales exceed industry projections.",
         "Cloud computing revenue growth remains strong.",
         "Agricultural commodity prices fluctuate on weather patterns.",
@@ -292,7 +304,7 @@ def create_sample_training_data() -> pd.DataFrame:
         "Data center construction accelerates worldwide.",
         "Apparel retailers face margin pressure from costs.",
         "Alternative energy storage solutions gain traction.",
-                "Packaging industry adapts to sustainability demands.",
+        "Packaging industry adapts to sustainability demands.",
         "Hotel occupancy rates improve but remain below pre-pandemic.",
         "Copper demand strengthens on infrastructure buildout.",
         "Software-as-a-service subscriptions continue upward trend.",
@@ -304,51 +316,29 @@ def create_sample_training_data() -> pd.DataFrame:
         "3D printing technology adoption expands in manufacturing.",
     ]
     labels = [
-        "positive",
-        "negative",
-        "neutral",
-        "positive",
-        "negative",
-        "neutral",
-        "positive",
-        "negative",
-        "positive",
-        "negative",
-                "neutral",
-        "positive",
-        "negative",
-        "neutral",
-        "positive",
-        "negative",
-        "positive",
-        "negative",
-        "negative",
-        "neutral",
-        "positive",
-        "positive",
-        "positive",
-        "negative",
-        "negative",
-        "positive",
-        "neutral",
-        "neutral",
-        "positive",
-        "positive",
-                "positive", "positive", "neutral", "neutral", "positive", "positive",
-        "negative", "positive", "negative", "neutral", "positive", "negative",
-        "positive", "positive", "negative", "neutral", "neutral", "negative",
-        "positive", "positive",
-        "positive", "neutral", "negative", "negative", "positive", "positive",
-        "neutral", "negative", "positive", "positive", "positive", "neutral",
-        "positive", "negative", "positive", "positive", "positive", "positive",
-        "neutral", "positive",
-        "neutral", "positive", "positive", "neutral", "positive", "neutral",
-        "neutral", "negative", "neutral", "positive", "neutral", "positive",
-        "negative", "positive", "neutral", "positive", "neutral", "positive",
-        "negative", "positive",
-        "neutral", "neutral", "positive", "positive", "negative", "positive",
-        "neutral", "positive", "neutral", "positive",
+        "positive", "negative", "neutral", "positive", "negative",
+        "neutral", "positive", "negative", "positive", "negative",
+        "neutral", "positive", "negative", "neutral", "positive",
+        "negative", "positive", "negative", "negative", "neutral",
+        "positive", "positive", "positive", "negative", "negative",
+        "positive", "neutral", "neutral", "positive", "positive",
+        "positive", "positive", "neutral", "neutral", "positive",
+        "positive", "negative", "positive", "negative", "neutral",
+        "positive", "negative", "positive", "positive", "negative",
+        "neutral", "neutral", "negative", "positive", "positive",
+        "positive", "neutral", "negative", "negative", "positive",
+        "positive", "neutral", "negative", "positive", "positive",
+        "positive", "neutral", "positive", "negative", "positive",
+        "positive", "positive", "positive", "neutral", "positive",
+        "neutral", "positive", "positive", "neutral", "positive",
+        "neutral", "neutral", "negative", "neutral", "positive",
+        "neutral", "positive", "negative", "positive", "neutral",
+        "positive", "neutral", "positive", "negative", "positive",
+        "neutral", "neutral", "positive", "positive", "negative",
+        "positive", "neutral", "positive", "neutral", "positive",
     ]
+    # Sanity check lengths
+    assert len(texts) == len(labels), "texts and labels must have same length"
     return pd.DataFrame({"text": texts, "label": labels})
 
 
